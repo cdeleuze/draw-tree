@@ -1,0 +1,28 @@
+
+block
+            decls
+                decl
+                    vardecl
+                        VAR
+                        vardeclgroups
+                            vardeclgroup
+                                ids
+                                    ID
+                                COLON
+                                atype
+                                    basic_type
+                                        BOOLEAN
+            insts
+                    inst
+                        lvalue
+                            ID
+                        BECOMES
+                        expr
+                            expr
+                                TRUE
+                            addop
+                                OR
+                            expr
+                                TRUE
+
+
