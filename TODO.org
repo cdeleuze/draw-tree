@@ -1,7 +1,6 @@
 
 ** TODO allow rescaling graphic display
-** TODO allow sliding graphic display
-
+** DONE allow sliding graphic display
 ** TODO split wide tree in several horizontal sections
 * old stuff
 move .tree and .eps in subdir(s)

@@ -116,6 +116,25 @@ let make_output_name out name ext =
     m ^ "." ^ ext
   else out
     
+let display_tree p =
+  let x,y,w,h = bb p in
+  Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
+  let cont = ref true in
+  let xw = ref 0 and yw = ref 0 in
+  while !cont do
+    Graphics.clear_graph ();
+    to_sc p !xw !yw;
+    let k = Graphics.read_key () in
+    match k with 'l' -> xw := !xw - 100
+    | 'h' -> xw := !xw + 100
+    | 'j' -> yw := !yw + 100
+    | 'k' -> yw := !yw - 100
+    | '<' -> xw := 0
+    | '>' -> xw := -w / 2 (* we should set to w minus the actual window size, but we don't know it *)
+    | 'q' -> cont := false
+    | _ -> ()
+  done
+
 
 (* Read tree, select algorithm and various parameters, produce
    output. *)
@@ -191,12 +210,8 @@ let main file sep =
     Pictures.to_fig_file
       (make_output_name !output_fig file "fig")
       ("Command line: " ^ string_args) p
-  else begin
-    let x,y,w,h = bb p in
-    Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
-    to_sc p 0 0;
-    ignore (Graphics.read_key ())
-  end
+  else
+    display_tree p
 ;;
 
 (*s Parsing of arguments *)
