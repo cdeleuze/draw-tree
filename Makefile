@@ -73,6 +73,10 @@ manual6.eps: manual.tree tree
 auto.eps: fact.tree tree
 	$(TREE) -d 31 -d 38 -d 38 -d 39 -d 39 -d 41 -oe $@ $<
 
+
+fonts: fonts.ml
+	ocamlc graphics.cma $< -o $@
+
 clean:
 	rm -f *.cmo *.cmx *.cmi *.eps tree
 

@@ -1,7 +1,42 @@
 
-** TODO allow rescaling graphic display
+* compaction
+** TODO allow using compaction result easily
+** TODO -d <comma-separated list> (instead of repeating -d)
+** TODO progress indication for smart compaction
+since it can be horribly long
+possibly auto-abort
+** smarter compaction
+*** find widest line, try moving down nodes to reduce it
+*** allow moving subtrees horizontally
+* features
+** DONE allow rescaling graphic display
+Graphics.set_text_size is not implemented but Graphics.set_font is
+
+xlsfonts show available fonts
+
+lucida is available in sizes 8,10,12,14,18,24
+and shapes (normal), bold, bolditalic, italic, typewriter,
+typewriter-bold
+
+The following one looks more interesting since it can display much
+smaller characters (usefull for big trees)
+
+-misc-fixed-medium-r-normal-- sizes: 6; 7; 8; 9; 10; 13; 14; 15; 18; 20
+(7/8, 9/10, 13/14 and 15/18 have same length)
+
+see file fonts.ml
+
+Graphics.resize_window is ok
+
 ** DONE allow sliding graphic display
+but we don't know screen size
+see xrandr(3) maybe
+
+also http://tronche.com/gui/x/xlib/display/screen-information.html
+
 ** TODO split wide tree in several horizontal sections
+** TODO variable node height
+
 * old stuff
 move .tree and .eps in subdir(s)
 

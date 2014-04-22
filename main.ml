@@ -115,24 +115,55 @@ let make_output_name out name ext =
     in
     m ^ "." ^ ext
   else out
-    
+
+let debug s = print_string (s ^ "\n"); flush stdout
+
 let display_tree p =
+  (* The picture has been built for the 'fixed' font.  For scaling the
+     picture on screen we will use the following font, available in
+     several sizes.  When changing the font size, we need to scale the
+     picture dimensions accordingly.  We use the length of a reference
+     string (see file font.ml) to determine the scale factor. [sizes]
+     contains the available sizes for the selected font along with the
+     length of the reference string.
+
+     The reference string has length 198 for 'fixed' font, so the
+     scale factor is the reference string length for the selected font
+     divided by 198.
+  *)
+  let font  = "-misc-fixed-medium-r-normal--%i-*" in
+  let sizes = [| 6,132.; 8,165.; 10,198.; 14,231.; 18,297.; 20,330. |] 
+  in
   let x,y,w,h = bb p in
   Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
-  let cont = ref true in
+
+  let cont = ref true in 
   let xw = ref 0 and yw = ref 0 in
+  let i = ref 2 
+  in
   while !cont do
-    Graphics.clear_graph ();
-    to_sc p !xw !yw;
+    let size,width = sizes.(!i) in let sc = width /. 198. in
+    let ww = int_of_float ((float_of_int w) *. sc) in
+    let wh = int_of_float ((float_of_int h) *. sc) in
+
+    (* Warning: we need to [resize_window] *before* [set_font]! *)
+    Graphics.resize_window ww wh;
+    Graphics.set_font (Printf.sprintf (Obj.magic font) size);
+    Printf.printf "isz=%i size=%i width=%f ww=%i" !i size width ww; print_newline();
+
+    to_screen p !xw !yw ww wh;
     let k = Graphics.read_key () in
-    match k with 'l' -> xw := !xw - 100
+    match k with 
+      'l' -> xw := !xw - 100
     | 'h' -> xw := !xw + 100
     | 'j' -> yw := !yw + 100
     | 'k' -> yw := !yw - 100
     | '<' -> xw := 0
-    | '>' -> xw := -w / 2 (* we should set to w minus the actual window size, but we don't know it *)
+    | '>' -> xw := -w / 2 (* we should set to w minus the screen size, but we don't know it *)
     | 'q' -> cont := false
-    | _ -> ()
+    | '+' -> if !i < Array.length sizes - 1 then incr i
+    | '-' -> if !i > 0 then decr i
+    |  _  -> ()
   done
 
 
@@ -222,7 +253,7 @@ Arg.parse
  "-of", Arg.Set_string output_fig, "<file> output to fig file";
  "-sep", Arg.Set_float  sep,    "<sep>  node separation (default "
  ^ string_of_float !sep ^ ")";
- "-w", Arg.Set_float  width,  "<width> node width (default label length)";
+ "-w", Arg.Set_float  width,  "<width> node width (default is label length)";
  "-l", Arg.Set  left,  "flush left";
  "-r", Arg.Set  right,  "flush right";
  "-e", Arg.Set  edge,  "align on edge (not positions)";
@@ -239,4 +270,5 @@ Arg.parse
  "--bf-compact", Arg.Set_int  bf, "<p> brute force compaction: allow moving 2 nodes down to compact, display all combinations that reduce width by at least p percent.";
  "--smart-compact", Arg.Set_int search, "<p> smart compaction: try moving down nodes as long as this provides a gain of at least p percent in width."
 ]
-  (fun s -> main s !sep) "tree <options> <input_file>"
+  (fun s -> main s !sep) "tree <options> <input_file>\n\
+by default display on screen.  Move with vi-like bindings, scale with -/+."
