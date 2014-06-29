@@ -29,6 +29,7 @@ let draw_tree draw_node draw_edge node x y =
   
   match node with Dnode(_, t,s) ->
     (process_sons help x y s) @ (draw_node x y node)
+  | Dleaf(_,l) -> draw_node 0. 0. node
 ;;
 
 
@@ -118,7 +119,7 @@ let make_output_name out name ext =
 
 let debug s = print_string (s ^ "\n"); flush stdout
 
-let display_tree p =
+let display_tree dt =
   (* The picture has been built for the 'fixed' font.  For scaling the
      picture on screen we will use the following font, available in
      several sizes.  When changing the font size, we need to scale the
@@ -134,38 +135,67 @@ let display_tree p =
   let font  = "-misc-fixed-medium-r-normal--%i-*" in
   let sizes = [| 6,132.; 8,165.; 10,198.; 14,231.; 18,297.; 20,330. |] 
   in
-  let x,y,w,h = bb p in
+  let make_p dt = (if !bup then bottom_up else (fun p -> p))
+    ((if !noedge then pict_of_tree_ne else pict_of_tree) dt)
+  in
+  let x,y,w,h = bb (make_p dt) in
   Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
 
-  let cont = ref true in 
-  let xw = ref 0 and yw = ref 0 in
-  let i = ref 2 
+  (* use a zipper-like data structure to focus on a part on the tree *)
+  let focus (z,dt) k =
+    let sons = match dt with
+      | Dleaf _ -> None
+      | Dnode(bb,label,sons) -> Some sons
+    in
+    match k with
+      'K' -> (match z with
+	(n,h)::t -> t,h
+      | []       -> ([], dt))
+
+    | 'J' -> (match sons with
+      | None -> (z,dt)
+      | Some sons -> let n = (List.length sons-1) /2 in
+		     ((n,dt)::z), let (s,_,_) = List.nth sons n in s)
+
+    | 'H' | 'L' -> (match z with
+      (n,Dnode(bb,label,sons))::t -> 
+	let n'= if k='H' then n-1 else n+1 in
+	if n'<List.length sons && n'>=0 then
+	  let (s,_,_) = List.nth sons n'
+	  in ((n',Dnode(bb,label,sons))::t,s)
+	else
+	  (n,Dnode(bb,label,sons))::t,dt
+      | z -> z,dt)
   in
-  while !cont do
-    let size,width = sizes.(!i) in let sc = width /. 198. in
+
+  let rec loop xw yw i ((zip, dt) as d) =
+    let size,width = sizes.(i) in let sc = width /. 198. in
+    let x,y,w,h = bb (make_p dt) in
     let ww = int_of_float ((float_of_int w) *. sc) in
     let wh = int_of_float ((float_of_int h) *. sc) in
 
     (* Warning: we need to [resize_window] *before* [set_font]! *)
     Graphics.resize_window ww wh;
     Graphics.set_font (Printf.sprintf (Obj.magic font) size);
-    Printf.printf "isz=%i size=%i width=%f ww=%i" !i size width ww; print_newline();
+    Printf.printf "isz=%i size=%i width=%f ww=%i" i size width ww; print_newline();
 
-    to_screen p !xw !yw ww wh;
+    to_screen (make_p dt) xw yw ww wh;
     let k = Graphics.read_key () in
     match k with 
-      'l' -> xw := !xw - 100
-    | 'h' -> xw := !xw + 100
-    | 'j' -> yw := !yw + 100
-    | 'k' -> yw := !yw - 100
-    | '<' -> xw := 0
-    | '>' -> xw := -w / 2 (* we should set to w minus the screen size, but we don't know it *)
-    | 'q' -> cont := false
-    | '+' -> if !i < Array.length sizes - 1 then incr i
-    | '-' -> if !i > 0 then decr i
-    |  _  -> ()
-  done
-
+      'l' -> loop (xw - 100) yw i d
+    | 'h' -> loop (xw + 100) yw i d
+    | 'j' -> loop xw (yw + 100) i d
+    | 'k' -> loop xw (yw - 100) i d
+    | '<' -> loop 0 yw i d
+    | '>' -> loop (-w / 2) yw i d (* we should set to w minus the screen size, but we don't know it *)
+    | 'q' -> ()
+    | '+' -> loop xw yw (if i < Array.length sizes - 1 then i+1 else i) d
+    | '-' -> loop xw yw (if i > 0 then i-1 else i) d
+    | 'J' | 'K' | 'H' | 'L' -> loop xw yw i (focus (zip,dt) k)
+    |  _  -> loop xw yw i d
+  in
+  loop 0 0 2 ([], dt)
+    
 
 (* Read tree, select algorithm and various parameters, produce
    output. *)
@@ -197,12 +227,6 @@ let main file sep =
              if !align=3 then fun t -> align_leaves3 (draw t) else
 	     draw
   in
-  let dt = draw t in
-
-  let p = (if !bup then bottom_up else (fun p -> p))
-    ((if !noedge then pict_of_tree_ne else pict_of_tree) dt)
-  in
-
   if !search <> -1 then begin
     let ow, oh, res = smart_compact !search "" (float_of_int !v) sep root_pos t
     in
@@ -227,7 +251,13 @@ let main file sep =
       l;
     exit 0
   end;
-  
+
+  let dt = draw t in
+
+  let p = (if !bup then bottom_up else (fun p -> p))
+    ((if !noedge then pict_of_tree_ne else pict_of_tree) dt)
+  in
+ 
   let l,r = tree_width dt in
   Printf.printf "width=%.2f" (r-.l);
   print_newline ();
@@ -242,7 +272,7 @@ let main file sep =
       (make_output_name !output_fig file "fig")
       ("Command line: " ^ string_args) p
   else
-    display_tree p
+    display_tree dt
 ;;
 
 (*s Parsing of arguments *)
@@ -271,4 +301,4 @@ Arg.parse
  "--smart-compact", Arg.Set_int search, "<p> smart compaction: try moving down nodes as long as this provides a gain of at least p percent in width."
 ]
   (fun s -> main s !sep) "tree <options> <input_file>\n\
-by default display on screen.  Move with vi-like bindings, scale with -/+."
+by default display on screen.  Move with vi-like bindings, scale with -/+, navigate with uppercase vi-like bindings."
