@@ -5,8 +5,19 @@ open Tree
 
 let fill = ref 255 (* grey level of label box *)
 let v  = ref 30    (* vertical distance between center of nodes *)
-let vu = ref 4     (* size of up vertical edge ZZZ 4 = 0 ? *)
-let vb = ref 12    (* size of bottom vertical edge *)
+let va = ref 0     (* length of edge vertical part above node *)
+let vb = ref 0     (* length of edge vertical part below node *)
+
+(* [charwidth] and [charheight] are set to 6. and 10 as default value,
+   the ones needed for eps generation.  They will be changed for
+   screen display, according to default font.  The screen width of a
+   reference string will be put in [refwidth] to compute actual char
+   width and height to be used on current screen.  See function
+   [compute_charsize] below *)
+
+let charwidth = ref 6. 
+let charheight = ref 10
+let refwidth = ref 0.
 
 (*s Making pictures *)
 
@@ -33,7 +44,7 @@ let draw_tree draw_node draw_edge node x y =
 ;;
 
 
-let x_ x = int_of_float (6. *. x);;   (* largeur d'un caractère *)
+let x_ x = int_of_float (!charwidth *. x);;   (* x unit is char, convert to pixel *)
 let y_ y = int_of_float (-. y);;
 
 open Pictures
@@ -43,16 +54,17 @@ let draw_node x y n =
   in
   let dx = x_( (1.+. (float_of_int (String.length t)))/.2.)
   in
-  [  Set_rgb_color (!fill,!fill,!fill); Fill_rect(x_ x-dx, y_ y-4, dx*2, 16);
+  (* the -4 in y is what looks better when generating eps *)
+  [  Set_rgb_color (!fill,!fill,!fill); Fill_rect(x_ x-dx, y_ y-4, dx*2, !charheight+4);
      Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ]
 
 let draw_edge x1 y1 x2 y2 =
   let x'1 = x_ x1 and y'1 = y_ y1
   and x'2 = x_ x2 and y'2 = y_ y2
   in
-  [ Segment(x'1, y'1,        x'1, y'1 - !vu);
-    Segment(x'1, y'1 - !vu,  x'2, y'1 - !v + !vb);
-    Segment(x'2, y'1 - !v + !vb,  x'2, y'2) ]
+  [ Segment(x'1, y'1 - 4,        x'1, y'1 - 4 - !vb);
+    Segment(x'1, y'1 - 4 - !vb,  x'2, y'1 - !v + !va + !charheight);
+    Segment(x'2, y'1 - !v + !va + !charheight,  x'2, y'2) ]
     
 let no_draw_edge x1 y1 x2 y2 = []
 
@@ -63,7 +75,7 @@ let pict_of_tree tree =
 let pict_of_tree_ne tree =
   make_picture (draw_tree draw_node no_draw_edge tree 0. 0.)
 
-(* TODO: rewrite that, it's awfull !+ check vu vb *)
+(* TODO: the +4 and -19 here are not extremely obvious *)
 
 let bottom_up pict =
   match pict with { cmds=c; x=x; y=y; width=w; height=h }
@@ -71,11 +83,11 @@ let bottom_up pict =
       let bc = List.map
       (fun e -> match e with
       | Fill_rect(x1,y1,w,h) -> Fill_rect(x1,-y1-h,w,h)
-      | CText(x,y,t) -> CText(x,-y-9,t)
+      | CText(x,y,t) -> CText(x,-y- !charheight+4,t)
       | Segment(x1,y1,x2,y2) -> Segment(x1,-y1,x2,-y2)
       | _ -> e)
       c in
-      { cmds=bc; x=x; y=y+h-24; width=w; height=h }
+      { cmds=bc; x=x; y=y+h-19; width=w; height=h }
 
 
 (*s Main function *)
@@ -119,6 +131,22 @@ let make_output_name out name ext =
 
 let debug s = print_string (s ^ "\n"); flush stdout
 
+(* This sets the values of refwidth and charwidth for scaling
+   graphics display.  These values depend on the default font, and in
+   particular are not the sames on X11 and Windows. *)
+
+let compute_charsize () =
+  let fdiv a b = float_of_int a /. float_of_int b
+  in
+  Graphics.open_graph ":0";
+  let text = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFG" in
+  let (w,h) = Graphics.text_size text in 
+  refwidth := float_of_int w;
+  charheight := h;
+  charwidth := !refwidth /. (float_of_int (String.length text));
+  debug (Printf.sprintf "refwidth=%.2f charwidth=%.2f charheight=%i\n"
+	   !refwidth !charwidth !charheight)
+
 let display_tree dt =
   (* The picture has been built for the 'fixed' font.  For scaling the
      picture on screen we will use the following font, available in
@@ -128,18 +156,24 @@ let display_tree dt =
      contains the available sizes for the selected font along with the
      length of the reference string.
 
-     The reference string has length 198 for 'fixed' font, so the
+     The reference string has length !refwidth for 'fixed' font, so the
      scale factor is the reference string length for the selected font
-     divided by 198.
+     divided by !refwidth.
   *)
-  let font  = "-misc-fixed-medium-r-normal--%i-*" in
-  let sizes = [| 6,132.; 8,165.; 10,198.; 14,231.; 18,297.; 20,330. |] 
+  compute_charsize ();
+  let sizes = if Sys.os_type = "Win32" 
+    then (* Scaling not currently supported on Win32 display *)
+      let (w,r) = (int_of_float !charwidth,!refwidth) in [| w,r;w,r;w,r |]
+    else [| 6,132.; 8,165.; 10,198.; 14,231.; 18,297.; 20,330. |] 
   in
   let make_p dt = (if !bup then bottom_up else (fun p -> p))
     ((if !noedge then pict_of_tree_ne else pict_of_tree) dt)
   in
   let x,y,w,h = bb (make_p dt) in
   Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
+
+  let font  = "-misc-fixed-medium-r-normal--%i-*" 
+  in
 
   (* use a zipper-like data structure to focus on a part on the tree *)
   let focus (z,dt) k =
@@ -169,15 +203,16 @@ let display_tree dt =
   in
 
   let rec loop xw yw i ((zip, dt) as d) =
-    let size,width = sizes.(i) in let sc = width /. 198. in
+    let size,width = sizes.(i) in let sc = width /. !refwidth in
     let x,y,w,h = bb (make_p dt) in
     let ww = int_of_float ((float_of_int w) *. sc) in
     let wh = int_of_float ((float_of_int h) *. sc) in
 
     (* Warning: we need to [resize_window] *before* [set_font]! *)
     Graphics.resize_window ww wh;
+    Graphics.clear_graph (); (* because resize_window does not work on ... Windows *)
     Graphics.set_font (Printf.sprintf (Obj.magic font) size);
-    Printf.printf "isz=%i size=%i width=%f ww=%i" i size width ww; print_newline();
+    Printf.printf "isz=%i size=%i width=%.0f ww=%i" i size width ww; print_newline();
 
     to_screen (make_p dt) xw yw ww wh;
     let k = Graphics.read_key () in
@@ -289,13 +324,14 @@ Arg.parse
  "-e", Arg.Set  edge,  "align on edge (not positions)";
  "-s", Arg.Set  env,   "center on shape";
  "-a", Arg.Set_int align, "<n> align leaves (0 none, 1 move leaves down, 2 move subtrees down, 3 center subtrees, default " ^ string_of_int !align ^ ")";
- "-u", Arg.Set  bup, "draw bottom-up";
+ "-u", Arg.Set  bup, "draw bottom-up (Upside-down)";
  "-c", Arg.Set  compact, "use compact algorithm";
  "-n", Arg.Set  noedge, "dont draw edges";
- "-b", Arg.Set_int fill, "grey level for label boxes (0=black, 255=white)";
- "-v", Arg.Set_int v, "vertical space (default " ^ string_of_int !v ^ ")";
- "-vu", Arg.Set_int vu, "up vertical space (default " ^ string_of_int !vu ^ ")";
- "-vb", Arg.Set_int vb, "bottom vertical space (default " ^  string_of_int !vb ^ ")";
+ "-b", Arg.Set_int fill, "grey level for label boxes (0=black, 255=white, default "
+                         ^ string_of_int !fill ^")";
+ "-v", Arg.Set_int v, "vertical space between nodes (default " ^ string_of_int !v ^ ")";
+ "-va", Arg.Set_int va, "edge length above node (default " ^ string_of_int !va ^ ")";
+ "-vb", Arg.Set_int vb, "edge length below node (default " ^ string_of_int !vb ^ ")";
  "-d", Arg.Int (fun i -> cn := i :: !cn), "<n> move down node n (can be repeated)";
  "--bf-compact", Arg.Set_int  bf, "<p> brute force compaction: allow moving 2 nodes down to compact, display all combinations that reduce width by at least p percent.";
  "--smart-compact", Arg.Set_int search, "<p> smart compaction: try moving down nodes as long as this provides a gain of at least p percent in width."

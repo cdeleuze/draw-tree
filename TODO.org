@@ -1,4 +1,27 @@
 
+* bugs
+** DONE windows: does not clear graphics window before redrawing
+apparently because of resize_window does not work
+=> added call to clear_graph
+
+** DONE windows: font size is bigger
+refwidth and charwidth computed at runtime
+** DONE windows: text misplaced
+too high for above edges
+too high and slightly too large for label box
+
+draw text 4 pixels lower is better (draw_node)
+
+=> the box is too small: it is not scaled in height (fixed height
+[-4,16] in draw_node)!
+
+=> still don't know why the box may not be large enough
+   (rounding error in x_?)
+
+maybe these vb, vu, and v parameters must be cleaned-up
+
+** windows: resize_window does not work
+at least on XP
 * compaction
 ** TODO allow using compaction result easily
 ** TODO -d <comma-separated list> (instead of repeating -d)
@@ -9,6 +32,16 @@ possibly auto-abort
 *** find widest line, try moving down nodes to reduce it
 *** allow moving subtrees horizontally
 * features
+** TODO still better options for va,vb, and v
+- specify va and vb at once
+- specify vertical length of edge slanted part 
+** TODO interactive setting of options
+** TODO test on cygwin
+** DONE better options for -vu and -vb
+at least simple settings
+  for -vb = -v && -vu = 0
+  and -vb = -v - x && -vu = x
+
 ** DONE allow rescaling graphic display
 Graphics.set_text_size is not implemented but Graphics.set_font is
 
@@ -36,6 +69,36 @@ also http://tronche.com/gui/x/xlib/display/screen-information.html
 
 ** TODO split wide tree in several horizontal sections
 ** TODO variable node height
+** TODO node annotation
+label possibly has annotation
+drawn below main label, size not taken into account
+
+node label [annotation] <bb> ?
+
+text:make_node computes node bb => easy
++ need to store label+annotation for drawing...
+
+tree.ml is polymorphic
+define node as a record width label and annotation (and others)
+=> how to include that as picture element?
+two text elements?
+
+** TODO subtree folding
+on the graphic display, by clicking on a node
+
+** TODO pdf export
+* fonts
+** select ps font
+ps font is (pictures.ml)
+let default_font = "Courier";; (*"Helvetica-Bold";;*)
+let default_font_size = 10;;
+
+could be parameterizable...
+
+** DONE in pict_of_tree, char width is taken as 6. (function x_)
+X11 default font indeed has a char width of 6.
+
+=> need to dynamically test that!
 
 * old stuff
 move .tree and .eps in subdir(s)

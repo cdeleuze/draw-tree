@@ -4,17 +4,37 @@ EPS=centerp.eps centern.eps centers.eps leftp.eps rightp.eps leftn.eps rightn.ep
 
 eps: $(EPS)
 
+# this rule is platform independent
+text.ml: text_s.ml
+	camlp4o -o $@ $<
+
 tree: tree.cmo text.cmo pictures.cmo main.cmo
 	ocamlc -g graphics.cma $^ -o $@
-
-text.cmo : text.ml
-	ocamlc -pp camlp4o -I +camlp4 -c $<
 
 %.cmo : %.ml
 	ocamlc -g -c $<
 
+OCAMLOPT=ocamlopt
+WINOCAMLOPT=/usr/bin/i686-w64-mingw32-ocamlopt
+
+tree.exe: tree.cmx text.cmx pictures.cmx main.cmx
+	make clean
+	make OPT=win tree.opt
+	mv tree.opt tree.exe
+
+tree.opt: tree.cmx text.cmx pictures.cmx main.cmx
+ifeq ($(OPT),win)
+	$(WINOCAMLOPT) -g graphics.cmxa $^ -o $@
+else
+	$(OCAMLOPT) -g graphics.cmxa $^ -o $@
+endif
+
 %.cmx : %.ml
-	ocamlopt -c $<
+ifeq ($(OPT),win)
+	$(WINOCAMLOPT) -c $<
+else
+	$(OCAMLOPT) -c $<
+endif
 
 ps: eps
 	ocps -2 tree
@@ -77,6 +97,15 @@ auto.eps: fact.tree tree
 fonts: fonts.ml
 	ocamlc graphics.cma $< -o $@
 
+test_text: test_text.ml
+	ocamlc graphics.cma $< -o $@
+
+fonts.exe: fonts.ml
+	$(WINOCAMLOPT) graphics.cmxa $< -o $@
+
+test_text.exe: test_text.ml
+	$(WINOCAMLOPT) graphics.cmxa $< -o $@
+
 clean:
-	rm -f *.cmo *.cmx *.cmi *.eps tree
+	rm -f *.cmo *.cmx *.cmi *.eps tree tree.opt text.ml
 
