@@ -1,4 +1,11 @@
 
+* see also
+pstricks trees (part VIII of documentation)
+
+treefit=tight|loose are our compact and normal modes?
+
+plus nice features!
+
 * bugs
 ** DONE windows: does not clear graphics window before redrawing
 apparently because of resize_window does not work
@@ -31,6 +38,12 @@ possibly auto-abort
 ** smarter compaction
 *** find widest line, try moving down nodes to reduce it
 *** allow moving subtrees horizontally
+* text format
+add leading dot
+ignore lines w/o it
+
+later, process them as node attributes
+
 * features
 ** TODO still better options for va,vb, and v
 - specify va and vb at once
@@ -90,10 +103,18 @@ on the graphic display, by clicking on a node
 * fonts
 ** select ps font
 ps font is (pictures.ml)
-let default_font = "Courier";; (*"Helvetica-Bold";;*)
+let default_font = "Courier";;
 let default_font_size = 10;;
 
 could be parameterizable...
+
+other possible fonts
+Helvetica
+Helvetica-Bold
+Times
+...
+but are not fixed width...
+don't play nice with text background box
 
 ** DONE in pict_of_tree, char width is taken as 6. (function x_)
 X11 default font indeed has a char width of 6.

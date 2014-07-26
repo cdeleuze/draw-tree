@@ -206,8 +206,9 @@ let bb_cmd cmd =
   | Set_line_width _ 
     -> None
 
+  (* ok with default font and size: charwidth=6, charheight=10 *)
   | CText(x,y,s) -> let l = 6*String.length s
-	in Some(x-l/2,y,x+l/2, y+6) (* ZZZ *)
+	in Some(x-l/2,y,x+l/2, y+10)
 
   | Segment(x1,y1,x2,y2) -> Some(x1,y1,x2,y2)
 

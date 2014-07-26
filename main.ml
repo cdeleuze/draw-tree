@@ -54,6 +54,8 @@ let draw_node x y n =
   in
   let dx = x_( (1.+. (float_of_int (String.length t)))/.2.)
   in
+  (* is this a good idea? the bbox changes slightly... *)
+  if !fill = 255 then [ Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ] else
   (* the -4 in y is what looks better when generating eps *)
   [  Set_rgb_color (!fill,!fill,!fill); Fill_rect(x_ x-dx, y_ y-4, dx*2, !charheight+4);
      Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ]
@@ -64,7 +66,7 @@ let draw_edge x1 y1 x2 y2 =
   in
   [ Segment(x'1, y'1 - 4,        x'1, y'1 - 4 - !vb);
     Segment(x'1, y'1 - 4 - !vb,  x'2, y'1 - !v + !va + !charheight);
-    Segment(x'2, y'1 - !v + !va + !charheight,  x'2, y'2) ]
+    Segment(x'2, y'1 - !v + !va + !charheight,  x'2, y'2 + !charheight) ]
     
 let no_draw_edge x1 y1 x2 y2 = []
 
@@ -171,6 +173,7 @@ let display_tree dt =
   in
   let x,y,w,h = bb (make_p dt) in
   Graphics.open_graph (":0 " ^ string_of_int w ^ "x" ^ string_of_int h);
+  Graphics.set_window_title "tree viewer";
 
   let font  = "-misc-fixed-medium-r-normal--%i-*" 
   in
@@ -222,7 +225,12 @@ let display_tree dt =
     | 'j' -> loop xw (yw + 100) i d
     | 'k' -> loop xw (yw - 100) i d
     | '<' -> loop 0 yw i d
-    | '>' -> loop (-w / 2) yw i d (* we should set to w minus the screen size, but we don't know it *)
+      (* size_x/y may give a value larger than actual screen...*)
+    | '>' -> loop (Graphics.size_x()-ww) yw i d
+    | '^' -> loop xw (Graphics.size_y()-wh) i d
+    | 'v' -> loop xw 0 i d
+
+
     | 'q' -> ()
     | '+' -> loop xw yw (if i < Array.length sizes - 1 then i+1 else i) d
     | '-' -> loop xw yw (if i > 0 then i-1 else i) d
