@@ -7,6 +7,15 @@ treefit=tight|loose are our compact and normal modes?
 plus nice features!
 
 * bugs
+** compile text.cmi?
+text.mli useless?
+** text cut in x11 display
+too high...
+
+** DONE text cut in eps export
+text at bottom of bounding box (eg CS130/fhs2.eps)
+Pictures.bb_cmd 0,10 -> -2,8
+
 ** DONE windows: does not clear graphics window before redrawing
 apparently because of resize_window does not work
 => added call to clear_graph
@@ -29,6 +38,12 @@ maybe these vb, vu, and v parameters must be cleaned-up
 
 ** windows: resize_window does not work
 at least on XP
+
+* details
+** Fill_rect in main.draw_node
+not exactly vertically aligned (a bit too high).
+but shifting down 1 makes it worse
+
 * compaction
 ** TODO allow using compaction result easily
 ** TODO -d <comma-separated list> (instead of repeating -d)
@@ -41,10 +56,22 @@ possibly auto-abort
 * text format
 add leading dot
 ignore lines w/o it
-
 later, process them as node attributes
 
+currently, ignore leading dot
+
+* emacs mode
+hilight siblings
+
 * features
+** TODO nodes of different kinds
+define styles for kind of nodes
+label nodes for their kind (or tags)
+
+eg node names ending in / or not
+
+kind as first character on line?
+
 ** TODO still better options for va,vb, and v
 - specify va and vb at once
 - specify vertical length of edge slanted part 

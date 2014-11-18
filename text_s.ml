@@ -85,17 +85,21 @@ let lex ic =
   let s = Stack.create () 
   and bl = ref []  (* backlog *)
   and n = ref 0 in
-  
+
   (* read the next line and return the position pair (position, text)
      if no text (blank line), try next line *)
   
   let rec next_line () =
     n := !n + 1;
     let l = input_line ic in
-    try
-      let i = indent_size l in
-      i, String.sub l i (String.length l - i)
-    with Invalid_argument _ -> next_line ()
+    if String.length l > 0 && l.[0] = '#' then next_line () else
+      (* ignore leading dot *)
+      let l = if String.length l > 0 && l.[0] = '.' then String.sub l 1 (String.length l - 1) else l
+      in
+      try
+	let i = indent_size l in
+	i, String.sub l i (String.length l - i)
+      with Invalid_argument _ -> next_line ()
   in
   
   (* This is the function that produces tokens for the stream.
