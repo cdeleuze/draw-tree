@@ -13,7 +13,7 @@ let fdiv a b = float_of_int a /. float_of_int b
 
 let one_font fmt sizes =
   print_endline fmt;
-  let f = format_of_string (Obj.magic fmt) in
+  let f = Scanf.format_from_string fmt "%i" in
   List.iter (fun s -> 
     let (w,h) = get_text_size (Printf.sprintf f s) in
     Printf.printf "s=%i w=%i %.2f h=%i\n" s w (fdiv w l) h) 

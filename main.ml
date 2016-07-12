@@ -214,7 +214,7 @@ let display_tree dt =
     (* Warning: we need to [resize_window] *before* [set_font]! *)
     Graphics.resize_window ww wh;
     Graphics.clear_graph (); (* because resize_window does not work on ... Windows *)
-    Graphics.set_font (Printf.sprintf (Obj.magic font) size);
+    Graphics.set_font (Printf.sprintf (Scanf.format_from_string font "%i") size);
     Printf.printf "isz=%i size=%i width=%.0f ww=%i" i size width ww; print_newline();
 
     to_screen (make_p dt) xw yw ww wh;
