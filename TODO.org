@@ -64,6 +64,7 @@ currently, ignore leading dot
 hilight siblings
 
 * features
+** TODO create eps from key in graphics window
 ** TODO nodes of different kinds
 define styles for kind of nodes
 label nodes for their kind (or tags)
