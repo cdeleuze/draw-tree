@@ -1137,7 +1137,7 @@ The following figure shows a nice compact representation of a
 derivation tree produced by a syntax analysis tool.
 
 \begin{figureh}
-   \centering\imgl{25cm}{compact2}
+  \centering\imgl{25cm}{compact2}
 %  \caption{A larger example of a compact tree}
   \label{fig:compact2}
 \end{figureh}

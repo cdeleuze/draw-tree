@@ -1,4 +1,11 @@
 
+* important
+** DONE merge attributes stuff from semantics
+keep # as comment char?
+extent < > should be provided as attribute
+
+convert standard tree to this one (ignoring other attributes)
+
 * see also
 pstricks trees (part VIII of documentation)
 
@@ -7,10 +14,17 @@ treefit=tight|loose are our compact and normal modes?
 plus nice features!
 
 * bugs
-** compile text.cmi?
-text.mli useless?
+** <, >, v, ^ keys don't work?
+and are not documented
+
+** format pb w/ generated ps text
+top margin too big
+
+** -c makes -d ignored
+at least make it clear in doc
+
 ** text cut in x11 display
-too high...
+too high
 
 ** DONE text cut in eps export
 text at bottom of bounding box (eg CS130/fhs2.eps)
@@ -54,16 +68,14 @@ possibly auto-abort
 *** find widest line, try moving down nodes to reduce it
 *** allow moving subtrees horizontally
 * text format
-add leading dot
-ignore lines w/o it
-later, process them as node attributes
-
-currently, ignore leading dot
+** read/write in sexp format
+w/ specified paren chars
 
 * emacs mode
 hilight siblings
 
 * features
+** TODO display/generate w/ smart compaction
 ** TODO create eps from key in graphics window
 ** TODO nodes of different kinds
 define styles for kind of nodes
@@ -114,10 +126,9 @@ also http://tronche.com/gui/x/xlib/display/screen-information.html
 label possibly has annotation
 drawn below main label, size not taken into account
 
-node label [annotation] <bb> ?
+in text file, annotation would be as attribute
 
-text:make_node computes node bb => easy
-+ need to store label+annotation for drawing...
+need to store label+annotation for drawing...
 
 tree.ml is polymorphic
 define node as a record width label and annotation (and others)
@@ -170,6 +181,7 @@ fig scale 0.06299
 the scalefont values are incorrect
 ex, for 10pt courier, 150, should be 158.755...
 
+* more old stuff
 
 - -d not applied if -c present
 

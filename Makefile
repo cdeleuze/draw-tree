@@ -5,10 +5,10 @@ EPS=centerp.eps centern.eps centers.eps leftp.eps rightp.eps leftn.eps rightn.ep
 eps: $(EPS)
 
 # this rule is platform independent
-text.ml: text_s.ml text.cmi
-	camlp4o -o $@ $<
+gtree.ml: tree_io.ml
+	camlp4o -o $@ $^
 
-tree: tree.cmo text.cmo pictures.cmo main.cmo
+tree: tree.cmo gtree.cmo text.cmo pictures.cmo main.cmo
 	ocamlc -g graphics.cma $^ -o $@
 
 %.cmi : %.mli
@@ -110,5 +110,5 @@ test_text.exe: test_text.ml
 	$(WINOCAMLOPT) graphics.cmxa $< -o $@
 
 clean:
-	rm -f *.cmo *.cmx *.cmi *.eps tree tree.opt text.ml
+	rm -f *.cmo *.cmx *.cmi *.eps tree tree.opt
 
