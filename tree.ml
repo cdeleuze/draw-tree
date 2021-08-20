@@ -89,7 +89,7 @@ to build an ``envelope'' from the widths of all the nodes.
 So our recursive algorithm will take a [tree] and return a [dtree] and
 its shape.  The recursive definition of a tree says that a tree [t] is
 either a leaf [l] or a node [n] with some trees as sons.  The
-algorithm thus considers both cases :
+algorithm thus considers both cases:
 
 \begin{itemize}
 
@@ -259,7 +259,7 @@ three methods for centering, illustrated on Figure \ref{fig:center}:
   \label{fig:center}
 \end{figureh}
 
-We may also want to draw flushed trees (Figure \ref{fig:flush}),
+We may also want to draw flushed trees (FigureÂ \ref{fig:flush}),
 aligning:
 \begin{enumerate}
 \item positions (ie centers) of left (or right) nodes,
@@ -283,7 +283,7 @@ centering with information pertaining to the current tree only.
 
 %  Or maybe there are some tricks to achieve this? We'll see later.
 
-% ZZZ passer une information récursivement ? open recursion ? continuation ?
+% ZZZ passer une information recursivement ? open recursion ? continuation ?
 
 
 The following functions may be given as value for the [pos_root]
@@ -332,7 +332,7 @@ let root_rightn pos sbts shs sh t =
    encoding information in each node along with the label. The
    [pos_root] function would then implement a policy chosen based on
    the information found in the node.
-   ZZZ
+%   ZZZ
 *)
 
 
@@ -440,7 +440,7 @@ this information but we prefer store it in an array, with nodes
 numbered in prefix order.  [size] counts the number of nodes to create
 the array, [mark] does the computation.
 
-inutile pour root ZZZ
+% inutile pour root ZZZ
 
 *)
 
@@ -528,7 +528,7 @@ trees than the previous algorithm as shown on Figure
 \ref{fig:compact}.
 
 \begin{figureh}
-   \centering\img{.6\linewidth}{compact}
+  Â \centering\img{.6\linewidth}{compact}
    \caption{Compact version of our example}
    \label{fig:compact}
 \end{figureh}
@@ -737,7 +737,7 @@ is the fact that shapes are now lists.
 let dtree_of_tree_compact v sep pos_root t =
   
   (* The shape of a leaf node: the position is the center of the node,
-     by definition. ZZZ*)
+     by definition. %ZZZ *)
   let leaf_shape n = let (l,r) = width n in [ l, r ]
   in
 
@@ -810,8 +810,9 @@ let dtree_of_tree_compact v sep pos_root t =
 (*
 
 To obtain more compaction, we allow the user to give a list of nodes
-that have to be ``pushed down'' so that the tree can be narrower, as shown
-on Figure \ref{fig:manual}.
+that have to be ``pushed down'' so that the tree can be narrower. For
+example, Figure \ref{fig:manual} shows the result of manually pushing down
+node 6 (that is quite large).
 
 \begin{figureh}
   \centering
@@ -1030,7 +1031,7 @@ let search_one_more_node ms pct fake v sep pos_root t =
 
 (*
 
-  ZZZ  [add_mset] adds an mset to a list of msets
+  [add_mset] adds an mset to a list of msets % ZZZ
 
   TODO: decrease pct with each iteration ? 
 

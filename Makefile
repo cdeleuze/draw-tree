@@ -1,9 +1,4 @@
 
-
-EPS=centerp.eps centern.eps centers.eps leftp.eps rightp.eps leftn.eps rightn.eps compact.eps compact2.eps centerB.eps align0.eps align1.eps align2.eps align3.eps manual0.eps manual6.eps
-
-eps: $(EPS)
-
 # this rule is platform independent
 gtree.ml: tree_io.ml
 	camlp4o -o $@ $^
@@ -15,19 +10,19 @@ tree: tree.cmo gtree.cmo text.cmo pictures.cmo main.cmo
 	ocamlc -c $<
 
 %.cmo : %.ml
-	ocamlc -g -c $<
+	ocamlc -c $<
 
 OCAMLOPT=ocamlopt
 WINOCAMLOPT=/usr/bin/i686-w64-mingw32-ocamlopt
 
-tree.exe: tree.cmx text.cmx pictures.cmx main.cmx
+tree.exe: tree.cmx gtree.cmx text.cmx pictures.cmx main.cmx
 	make clean
 	make OPT=win tree.opt
 	mv tree.opt tree.exe
 
-tree.opt: tree.cmx text.cmx pictures.cmx main.cmx
+tree.opt: tree.cmx gtree.cmx text.cmx pictures.cmx main.cmx
 ifeq ($(OPT),win)
-	$(WINOCAMLOPT) -g graphics.cmxa $^ -o $@
+	$(WINOCAMLOPT) graphics.cmxa $^ -o $@
 else
 	$(OCAMLOPT) -g graphics.cmxa $^ -o $@
 endif
@@ -39,11 +34,24 @@ else
 	$(OCAMLOPT) -c $<
 endif
 
-ps: eps
-	ocps -2 tree
+pdf: figures
+	ocamlweb --header -s --noindex --class-options a4paper --latex-option novisiblespaces tree.ml > print.tex
+	pdflatex print
+	pdflatex print
+	mv print.pdf tree.pdf
+	rm print.*
 
+
+# generate pictures for documentation
+# we generate eps file, pdflatex will generate pdfs when needed
 
 TREE=./tree
+
+FIGS=centerp centern centers leftp rightp leftn rightn compact compact2 centerB align0 align1 align2 align3 manual0 manual6
+
+EPSFIGS=$(foreach f,$(FIGS),$f.eps)
+
+figures: $(EPSFIGS)
 
 centerp.eps: fig.tree tree
 	$(TREE) -oe $@ $<
@@ -97,6 +105,8 @@ auto.eps: fact.tree tree
 	$(TREE) -d 31 -d 38 -d 38 -d 39 -d 39 -d 41 -oe $@ $<
 
 
+# other
+
 fonts: fonts.ml
 	ocamlc graphics.cma $< -o $@
 
@@ -109,6 +119,10 @@ fonts.exe: fonts.ml
 test_text.exe: test_text.ml
 	$(WINOCAMLOPT) graphics.cmxa $< -o $@
 
+
+tgz:
+	tar cvzf ../tree.tgz
+
 clean:
-	rm -f *.cmo *.cmx *.cmi *.eps tree tree.opt
+	rm -f *.cmo *.cmx *.cmi *.eps *-eps-converted-to.pdf tree tree.opt
 
