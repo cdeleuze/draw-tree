@@ -50,15 +50,20 @@ let y_ y = int_of_float (-. y);;
 open Pictures
 
 let draw_node x y n = 
-  let t = match n with Dleaf (_,t) -> t | Dnode(_, t,_) -> t
+  let (t,ats) = match n with
+      Dleaf (_,(t,ats)) -> t,ats | Dnode(_, (t,ats),_) -> t,ats
   in
   let dx = x_( (1.+. (float_of_int (String.length t)))/.2.)
   in
   (* is this a good idea? the bbox changes slightly... *)
-  if !fill = 255 then [ Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ] else
+  (if !fill = 255 then [ Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ] else
   (* the -4 in y is what looks better when generating eps *)
   [  Set_rgb_color (!fill,!fill,!fill); Fill_rect(x_ x-dx, y_ y-4, dx*2, !charheight+4);
-     Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ]
+     Set_rgb_color (0,0,0); CText(x_ x,y_ y,t) ])
+  @
+    if ats = [] then [] else
+      let at = Text.display_attr (List.hd ats) in
+    [CText(x_ x + (x_ @@ (float_of_int (String.length at) +. 0.5) /. 2.), y_ y - 10, at)]
 
 let draw_edge x1 y1 x2 y2 =
   let x'1 = x_ x1 and y'1 = y_ y1
@@ -243,15 +248,21 @@ let display_tree dt =
 (* Read tree, select algorithm and various parameters, produce
    output. *)
 
+let rec to_gtree t = match t with
+  | Leaf(bb, (t,ats)) -> Gtree.Leaf(t,ats)
+  | Node(bb,(t,ats),cs) -> Gtree.Node(t,ats,List.map to_gtree cs)
+
 let main file sep =
   let string_args = String.concat " " (Array.to_list Sys.argv)
   in
   let t = Text.read_file file in
+(*  let id = fun i -> i in
+  Gtree.save_tree id Text.show_attr to_gtree t "/tmp/t.tree";*)
   let t = 
     if !width = -1. then t else
     rw_tree_width (-. !width /. 2.) (!width /. 2.) t
   in
-  let root_pos = 
+  let root_pos =
     if !env then root_centers else
     if !left then if !edge then root_leftn else root_leftp else
     if !right then if !edge then root_rightn else root_rightp
@@ -259,11 +270,11 @@ let main file sep =
   in
   let draw = 
     if !compact then
-      dtree_of_tree_compact (float_of_int !v) sep root_pos      
+      dtree_of_tree_compact (float_of_int !v) sep root_pos
     else if !cn=[] then
       dtree_of_tree (float_of_int !v) sep root_pos
     else
-      dtree_of_tree_compact_nodes "" !cn (float_of_int !v) sep root_pos
+      dtree_of_tree_compact_nodes ("",[]) !cn (float_of_int !v) sep root_pos
   in
   let draw = if !align=1 then fun t -> align_leaves  (draw t) else
              if !align=2 then fun t -> align_leaves2 (draw t) else
@@ -271,7 +282,7 @@ let main file sep =
 	     draw
   in
   if !search <> -1 then begin
-    let ow, oh, res = smart_compact !search "" (float_of_int !v) sep root_pos t
+    let ow, oh, res = smart_compact !search ("",[]) (float_of_int !v) sep root_pos t
     in
     let l = List.length res in
     Printf.printf "original width %.2f\n" ow;
@@ -286,7 +297,7 @@ let main file sep =
     exit 0
   end;
   if !bf <> -1 then begin
-    let ow, oh, l = brute_force_compact !bf "" (float_of_int !v) sep root_pos t in
+    let ow, oh, l = brute_force_compact !bf ("",[]) (float_of_int !v) sep root_pos t in
     Printf.printf "original width %.2f\n" ow;
     List.iter
       (fun (i,j,w,h) -> Printf.printf "[%i,%i] %.2f (%2.0f %%) height=%i (+%i)\n"

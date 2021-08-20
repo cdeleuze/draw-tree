@@ -1,22 +1,47 @@
 open Gtree
 
+(* How to read a tree from a text file.  This makes use of load_tree
+   from the tree_io/gtree module for generic tree loading/saving.
+
+   In addition to the name of the file to read from, load_tree is to be
+   given functions to build elements of the tree from the parsed text:
+    - make_label :: make node label from string label
+    - make_attr  :: make attribute from (name, [values])
+    - make_node  :: make non leaf node
+    - make_leaf  :: make leaf node
+ *)
+
+(* the BB attribute is special as it will be used in the drawing *)
+type attr = BB of float*float
+          | Attr of string * string list
+
+let show_attr = function
+  | BB(l,r) -> Printf.sprintf ":bb %f %f" l r
+  | Attr(name, vals) -> Printf.sprintf ":%s %s" name @@ String.concat " " vals
+
+(* display an attribute, ie produce a string to be used in the picture *)
+let display_attr = function
+  | Attr(name, vals) -> Printf.sprintf "%s=%s" name @@ String.concat " " vals
+  | BB(l,r) as a -> show_attr a
+
 (* get the bb from the list of attributes, or build the default value
    from the node tag *)
 let get_bb_attr t l =
   try
-    let Some a = List.find (fun p -> p <> None) l in a
+    let BB(l,r) = List.find (fun p -> match p with BB _ -> true | _ -> false) l in (l,r)
   with Not_found ->
     let w = float_of_int (String.length t) in
     -. w /. 2., w /. 2.
 
-let make_node t la rest = Tree.Node(get_bb_attr t la, t, rest)
-let make_leaf t la = Tree.Leaf(get_bb_attr t la, t)
+(* TODO: should remove BB attribute from the list? *)
+let make_node t la rest = Tree.Node(get_bb_attr t la, (t,la), rest)
+let make_leaf t la = Tree.Leaf(get_bb_attr t la, (t,la))
 
-(* we ignore all attrs other than bb *)
+(* read an attribute *)
 let make_attr (n,v) =
   match n, v with
-  | "bb", [l;u] -> Some(float_of_string l, float_of_string u)
-  | _ , _ -> None
+  | "bb", [l;u] -> BB(float_of_string l, float_of_string u)
+  | _ , _ -> Attr(n,v)
 
 let read_file file =
   let id v = v in
@@ -33,6 +58,7 @@ let display_as_text n p =
     let col = ref 1 in
     (fun () -> col := 0; print_newline(); print_newline()),
     (fun t c ->
+      let t = fst t in
       let l = String.length t in
       let d = max 0 (c-(String.length t)/2 - !col) in
       print_string (String.make d ' '); print_string t; col := !col + d + l)
