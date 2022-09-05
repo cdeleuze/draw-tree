@@ -17,8 +17,18 @@ The rest of the code is:
    eps, fig, and screen
  * main.ml: the main file
 
-Developped on GNU/Linux, it used to also work on Windows.
+Developped on GNU/Linux (it used to also work on Windows but needs
+some work).
 
+## building
+
+On debian 11, you need packages make, ocaml, camlp4,
+libgraphics-ocaml-dev, libcamlp4-ocaml-dev.
+
+To build the litterate code pdf (`make pdf`) you also need package
+ocamlweb.
+
+To convert fig files to PNG or whatever, package fig2dev.
 
 ----
 Licence is GPL v3 or any later version

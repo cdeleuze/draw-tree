@@ -1,16 +1,17 @@
+GLIBDIR=/usr/lib/ocaml/graphics
 
 # this rule is platform independent
 gtree.ml: tree_io.ml
 	camlp4o -o $@ $^
 
 tree: tree.cmo gtree.cmo text.cmo pictures.cmo main.cmo
-	ocamlc -g graphics.cma $^ -o $@
+	ocamlc -g -I $(GLIBDIR) graphics.cma $^ -o $@
 
 %.cmi : %.mli
 	ocamlc -c $<
 
 %.cmo : %.ml
-	ocamlc -c $<
+	ocamlc -c -I $(GLIBDIR) $<
 
 OCAMLOPT=ocamlopt
 WINOCAMLOPT=/usr/bin/i686-w64-mingw32-ocamlopt
@@ -24,14 +25,14 @@ tree.opt: tree.cmx gtree.cmx text.cmx pictures.cmx main.cmx
 ifeq ($(OPT),win)
 	$(WINOCAMLOPT) graphics.cmxa $^ -o $@
 else
-	$(OCAMLOPT) -g graphics.cmxa $^ -o $@
+	$(OCAMLOPT) -g -I $(GLIBDIR) graphics.cmxa $^ -o $@
 endif
 
 %.cmx : %.ml
 ifeq ($(OPT),win)
 	$(WINOCAMLOPT) -c $<
 else
-	$(OCAMLOPT) -c $<
+	$(OCAMLOPT) -c -I $(GLIBDIR) $<
 endif
 
 pdf: figures
